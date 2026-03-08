@@ -24,9 +24,10 @@ This setup uses a **single-cluster, multi-namespace** approach:
 - Cost-effective (~$95/month vs ~$220+ for multi-cluster)
 - Consistent by design (same cluster, same base config)
 
-## Getting Started
+## First Time Setup / Disaster Recovery
 
 ### 1. Bootstrap Terraform Backend
+Creates S3 bucket for terraform state file and DynamoDB Table.
 
 ```bash
 ./scripts/bootstrap-terraform-backend.sh

@@ -83,9 +83,9 @@ module "vpc" {
 module "eks" {
   source = "../../modules/eks"
 
-  cluster_name        = local.cluster_name
-  cluster_version     = var.cluster_version
-  vpc_id              = module.vpc.vpc_id
+  cluster_name    = local.cluster_name
+  cluster_version = var.cluster_version
+  vpc_id          = module.vpc.vpc_id
   # Use public subnets when NAT is disabled (nodes need internet to pull images)
   subnet_ids          = var.enable_nat_gateway ? module.vpc.private_subnet_ids : module.vpc.public_subnet_ids
   node_instance_types = var.node_instance_types
@@ -94,6 +94,18 @@ module "eks" {
   node_min_size       = var.node_min_size
   node_max_size       = var.node_max_size
   tags                = local.tags
+}
+
+module "aws_lb_controller" {
+  source = "../../modules/aws-lb-controller"
+
+  cluster_name      = module.eks.cluster_name
+  vpc_id            = module.vpc.vpc_id
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_provider_url = module.eks.oidc_provider_url
+  tags              = local.tags
+
+  depends_on = [module.eks]
 }
 
 module "argocd" {

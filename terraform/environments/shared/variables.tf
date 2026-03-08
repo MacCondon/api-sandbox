@@ -25,19 +25,19 @@ variable "cluster_version" {
 variable "node_instance_types" {
   description = "List of instance types for the node group"
   type        = list(string)
-  default     = ["t3.small"]  # Minimal cost setup
+  default     = ["t3.small"] # Minimal cost setup
 }
 
 variable "capacity_type" {
   description = "Capacity type for the node group"
   type        = string
-  default     = "SPOT"  # ~60-70% cheaper than ON_DEMAND
+  default     = "SPOT" # ~60-70% cheaper than ON_DEMAND
 }
 
 variable "node_desired_size" {
   description = "Desired number of nodes"
   type        = number
-  default     = 1  # Single node for experiments
+  default     = 1 # Single node for experiments
 }
 
 variable "node_min_size" {
@@ -55,7 +55,7 @@ variable "node_max_size" {
 variable "enable_nat_gateway" {
   description = "Enable NAT gateway (adds ~$32/month, required if nodes are in private subnets)"
   type        = bool
-  default     = false  # Disabled to save costs
+  default     = false # Disabled to save costs
 }
 
 variable "argocd_version" {
