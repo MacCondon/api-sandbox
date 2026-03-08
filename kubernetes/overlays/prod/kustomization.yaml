@@ -10,7 +10,7 @@ resources:
 images:
   - name: api-sandbox
     newName: 862087104112.dkr.ecr.us-west-2.amazonaws.com/api-sandbox-dev
-    newTag: latest
+    newTag: c4cccac
 
 replicas:
   - name: api-sandbox
