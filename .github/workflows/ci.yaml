@@ -1,0 +1,195 @@
+name: CI - Build and Promote
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - '.github/workflows/ci.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - '.github/workflows/ci.yaml'
+  workflow_dispatch:
+    inputs:
+      promote_to:
+        description: 'Promote current dev image to environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+
+env:
+  AWS_REGION: us-west-2
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: app/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: Run tests
+        run: pytest test_main.py -v
+
+  build:
+    name: Build and Push
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      short_sha: ${{ steps.meta.outputs.short_sha }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract metadata
+        id: meta
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: api-sandbox-dev
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "tags=${ECR_REGISTRY}/${ECR_REPOSITORY}:${SHORT_SHA},${ECR_REGISTRY}/${ECR_REPOSITORY}:latest" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app
+          file: ./app/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-dev:
+    name: Deploy to Dev
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update dev image tag
+        env:
+          SHORT_SHA: ${{ needs.build.outputs.short_sha }}
+        run: |
+          cd kubernetes/overlays/dev
+          sed -i "s/newTag: .*/newTag: ${SHORT_SHA}/" kustomization.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add kubernetes/overlays/dev/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore(dev): deploy image ${{ needs.build.outputs.short_sha }}"
+          git push
+
+  # Promotion jobs - triggered manually via workflow_dispatch
+  promote-staging:
+    name: Promote to Staging
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.promote_to == 'staging'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current dev tag
+        id: get-tag
+        run: |
+          TAG=$(grep 'newTag:' kubernetes/overlays/dev/kustomization.yaml | awk '{print $2}')
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Promoting tag: ${TAG}"
+
+      - name: Update staging image tag
+        run: |
+          cd kubernetes/overlays/staging
+          sed -i "s/newTag: .*/newTag: ${{ steps.get-tag.outputs.tag }}/" kustomization.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add kubernetes/overlays/staging/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore(staging): promote image ${{ steps.get-tag.outputs.tag }} from dev"
+          git push
+
+  promote-prod:
+    name: Promote to Prod
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.promote_to == 'prod'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get current staging tag
+        id: get-tag
+        run: |
+          TAG=$(grep 'newTag:' kubernetes/overlays/staging/kustomization.yaml | awk '{print $2}')
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Promoting tag: ${TAG}"
+
+      - name: Update prod image tag
+        run: |
+          cd kubernetes/overlays/prod
+          sed -i "s/newTag: .*/newTag: ${{ steps.get-tag.outputs.tag }}/" kustomization.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add kubernetes/overlays/prod/kustomization.yaml
+          git diff --staged --quiet || git commit -m "chore(prod): promote image ${{ steps.get-tag.outputs.tag }} from staging"
+          git push

@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: api-sandbox-environments
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            autoSync: "true"
+          - env: staging
+            autoSync: "true"
+          - env: prod
+            autoSync: "false"  # Manual sync for prod
+  template:
+    metadata:
+      name: 'api-sandbox-{{env}}'
+      namespace: argocd
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: api-sandbox
+      source:
+        repoURL: https://github.com/MacCondon/api-sandbox.git
+        targetRevision: main
+        path: 'kubernetes/overlays/{{env}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'api-sandbox-{{env}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m

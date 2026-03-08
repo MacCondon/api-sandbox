@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: api-sandbox-prod
+
+resources:
+  - ../../base
+
+# NOTE: Image tag is promoted from staging via CI/CD workflow
+images:
+  - name: api-sandbox
+    newName: 862087104112.dkr.ecr.us-west-2.amazonaws.com/api-sandbox-dev
+    newTag: latest
+
+replicas:
+  - name: api-sandbox
+    count: 2
+
+commonLabels:
+  app.kubernetes.io/env: prod
+
+# Production gets more resources
+patches:
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "200m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
+    target:
+      kind: Deployment
+      name: api-sandbox

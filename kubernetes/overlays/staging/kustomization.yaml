@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: api-sandbox-staging
+
+resources:
+  - ../../base
+
+# NOTE: Image tag is promoted from dev via CI/CD workflow
+images:
+  - name: api-sandbox
+    newName: 862087104112.dkr.ecr.us-west-2.amazonaws.com/api-sandbox-dev
+    newTag: latest
+
+replicas:
+  - name: api-sandbox
+    count: 1
+
+commonLabels:
+  app.kubernetes.io/env: staging

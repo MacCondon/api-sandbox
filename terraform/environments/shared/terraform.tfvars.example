@@ -1,0 +1,39 @@
+# Copy this file to terraform.tfvars and customize as needed
+
+aws_region  = "us-west-2"
+environment = "dev"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# EKS Configuration
+cluster_version = "1.29"
+
+# =============================================================================
+# COST OPTIMIZATION OPTIONS
+# =============================================================================
+#
+# MINIMAL SETUP (~$50/month) - Default configuration
+# Good for experiments and learning
+#
+node_instance_types = ["t3.small"]
+capacity_type       = "SPOT"           # ~60-70% cheaper, but can be interrupted
+node_desired_size   = 1
+node_min_size       = 1
+node_max_size       = 2
+enable_nat_gateway  = false            # Saves ~$32/month, nodes use public subnets
+
+# -----------------------------------------------------------------------------
+# PRODUCTION SETUP (~$200/month) - Uncomment below and comment above
+# Better reliability and capacity
+#
+# node_instance_types = ["t3.medium"]
+# capacity_type       = "ON_DEMAND"    # No interruptions
+# node_desired_size   = 2
+# node_min_size       = 2
+# node_max_size       = 4
+# enable_nat_gateway  = true           # Nodes in private subnets
+# -----------------------------------------------------------------------------
+
+# ArgoCD Configuration
+argocd_version = "5.51.6"
