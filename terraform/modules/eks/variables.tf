@@ -60,3 +60,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "cluster_admin_role_arns" {
+  description = "List of IAM role ARNs to grant cluster admin access"
+  type        = list(string)
+  default     = []
+}

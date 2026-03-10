@@ -72,7 +72,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request' || github.event_name == 'push' || github.event.inputs.action == 'plan' || github.event.inputs.action == 'apply'
-        run: terraform plan -no-color -out=tfplan
+        run: terraform plan -no-color -out=tfplan -var="ci_role_arn=${{ secrets.AWS_ROLE_ARN }}"
         continue-on-error: true
 
       - name: Update PR with Plan
@@ -113,4 +113,4 @@ jobs:
 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy'
-        run: terraform destroy -auto-approve
+        run: terraform destroy -auto-approve -var="ci_role_arn=${{ secrets.AWS_ROLE_ARN }}"

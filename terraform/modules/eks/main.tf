@@ -56,6 +56,11 @@ resource "aws_eks_cluster" "main" {
     endpoint_public_access  = true
   }
 
+  access_config {
+    authentication_mode                         = "API_AND_CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
   # Control plane logging (disabled by default to save costs)
   enabled_cluster_log_types = var.enable_cluster_logging ? ["api", "audit", "authenticator", "controllerManager", "scheduler"] : []
 
@@ -137,6 +142,28 @@ resource "aws_iam_openid_connect_provider" "cluster" {
   url             = aws_eks_cluster.main.identity[0].oidc[0].issuer
 
   tags = var.tags
+}
+
+resource "aws_eks_access_entry" "admin_roles" {
+  for_each = toset(var.cluster_admin_role_arns)
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = each.value
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "admin_roles" {
+  for_each = toset(var.cluster_admin_role_arns)
+
+  cluster_name  = aws_eks_cluster.main.name
+  principal_arn = each.value
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.admin_roles]
 }
 
 resource "aws_ecr_repository" "app" {

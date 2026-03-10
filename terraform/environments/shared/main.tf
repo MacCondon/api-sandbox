@@ -87,13 +87,14 @@ module "eks" {
   cluster_version = var.cluster_version
   vpc_id          = module.vpc.vpc_id
   # Use public subnets when NAT is disabled (nodes need internet to pull images)
-  subnet_ids          = var.enable_nat_gateway ? module.vpc.private_subnet_ids : module.vpc.public_subnet_ids
-  node_instance_types = var.node_instance_types
-  capacity_type       = var.capacity_type
-  node_desired_size   = var.node_desired_size
-  node_min_size       = var.node_min_size
-  node_max_size       = var.node_max_size
-  tags                = local.tags
+  subnet_ids              = var.enable_nat_gateway ? module.vpc.private_subnet_ids : module.vpc.public_subnet_ids
+  node_instance_types     = var.node_instance_types
+  capacity_type           = var.capacity_type
+  node_desired_size       = var.node_desired_size
+  node_min_size           = var.node_min_size
+  node_max_size           = var.node_max_size
+  cluster_admin_role_arns = var.ci_role_arn != "" ? [var.ci_role_arn] : []
+  tags                    = local.tags
 }
 
 module "aws_lb_controller" {

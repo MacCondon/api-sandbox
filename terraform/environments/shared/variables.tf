@@ -63,3 +63,9 @@ variable "argocd_version" {
   type        = string
   default     = "5.51.6"
 }
+
+variable "ci_role_arn" {
+  description = "IAM role ARN for CI/CD (GitHub Actions) to grant EKS cluster admin access"
+  type        = string
+  default     = ""
+}
