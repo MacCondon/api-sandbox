@@ -37,7 +37,7 @@ variable "capacity_type" {
 variable "node_desired_size" {
   description = "Desired number of nodes"
   type        = number
-  default     = 1 # Single node for experiments
+  default     = 2 # Two nodes to handle ArgoCD + app workloads
 }
 
 variable "node_min_size" {
