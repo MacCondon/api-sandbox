@@ -3,7 +3,11 @@
 A FastAPI application deployed on AWS EKS using Terraform and GitOps (ArgoCD) with multi-environment support.
 
 ## Overview
-![Architecture](docs/images/architecture.png) 
+### CICD
+![Architecture](docs/images/architecture_cicd.png) 
+
+### Cloud Architecture
+![Architecture](docs/images/architecture_cloud.png) 
 
 ## Network
  A single VPC (10.0.0.0/16) with public and private subnets across 3 availability zones, where EKS worker nodes run in public subnets (NAT Gateway disabled to save costs) with direct internet access via an     
@@ -78,6 +82,16 @@ kubectl get svc -n argocd argocd-server
 
 # Get the initial admin password
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+```
+
+### 6. Access the API
+
+```bash
+# Get the API URL (ALB hostname)
+kubectl get ingress api-sandbox -n api-sandbox-dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+
+# Test the API
+curl http://<ALB_HOSTNAME>/
 ```
 
 ## Promotion Workflow
