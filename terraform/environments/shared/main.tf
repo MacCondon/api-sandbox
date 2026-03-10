@@ -117,3 +117,16 @@ module "argocd" {
 
   depends_on = [module.eks]
 }
+
+module "cloudwatch_logging" {
+  source = "../../modules/cloudwatch-logging"
+
+  cluster_name       = module.eks.cluster_name
+  aws_region         = var.aws_region
+  oidc_provider_arn  = module.eks.oidc_provider_arn
+  oidc_provider_url  = module.eks.oidc_provider_url
+  log_retention_days = 7
+  tags               = local.tags
+
+  depends_on = [module.eks]
+}
