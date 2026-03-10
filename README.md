@@ -4,10 +4,10 @@ A FastAPI application deployed on AWS EKS using Terraform and GitOps (ArgoCD) wi
 
 ## Overview
 ### CICD
-![Architecture](docs/images/architecture_cicd.png) 
+![Architecture](docs/images/architecture_cicd.drawio.png) 
 
 ### Cloud Architecture
-![Architecture](docs/images/architecture_cloud.png) 
+![Architecture](docs/images/architecture_cloud.drawio.png) 
 
 ## Network
  A single VPC (10.0.0.0/16) with public and private subnets across 3 availability zones, where EKS worker nodes run in public subnets (NAT Gateway disabled to save costs) with direct internet access via an     
