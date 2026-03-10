@@ -24,6 +24,16 @@ This setup uses a **single-cluster, multi-namespace** approach:
 - Cost-effective (~$95/month vs ~$220+ for multi-cluster)
 - Consistent by design (same cluster, same base config)
 
+## GitHub Repository Configuration
+
+The Terraform workflow requires this repository variable:
+
+| Variable | Description |
+|----------|-------------|
+| `TF_STATE_BUCKET` | S3 bucket name for Terraform state |
+
+Set via: **Settings** → **Secrets and variables** → **Actions** → **Variables**
+
 ## First Time Setup / Disaster Recovery
 
 ### 1. Bootstrap Terraform Backend
