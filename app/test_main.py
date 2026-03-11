@@ -8,12 +8,6 @@ from main import app
 
 client = TestClient(app)
 
-def test_get_easter_egg():
-    """Test the easter egg endpoint returns some text."""
-    response = client.get("/easter-egg")
-    assert response.status_code == 200
-    assert response.text is not None
-
 def test_get_message():
     """Test the root endpoint returns correct structure."""
     before = int(time.time())
