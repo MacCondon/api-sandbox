@@ -25,7 +25,7 @@ variable "cluster_version" {
 variable "node_instance_types" {
   description = "List of instance types for the node group"
   type        = list(string)
-  default     = ["t3.small"] # Minimal cost setup
+  default     = ["t3.small"] # t3.micro only supports 4 pods/node, t3.small supports 11
 }
 
 variable "capacity_type" {
