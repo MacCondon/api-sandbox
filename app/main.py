@@ -27,6 +27,28 @@ async def get_message() -> MessageResponse:
         timestamp=int(time.time()),
     )
 
+@app.get("/easter-egg")
+async def get_easter_egg() -> dict:
+    """Return a JSON payload that visually represents an easter egg using ASCII art."""
+    art = [
+        "      _____      ",
+        "    /       \\    ",
+        "   /         \\   ",
+        "  /           \\  ",
+        " /             \\ ",
+        "|               |",
+        "|   ( o   o )   |",
+        "|      ^        |",
+        "|    \\___/      |",
+        " \\             / ",
+        "  \\           /  ",
+        "   \\         /   ",
+        "    \\______/    ",
+    ]
+    return {
+        "easter_egg": art
+    }
+
 
 @app.get("/health")
 async def health_check() -> dict:
