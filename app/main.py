@@ -3,6 +3,7 @@
 import time
 
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 app = FastAPI(
@@ -27,9 +28,9 @@ async def get_message() -> MessageResponse:
         timestamp=int(time.time()),
     )
 
-@app.get("/easter-egg")
-async def get_easter_egg() -> dict:
-    """Return a JSON payload that visually represents an easter egg using ASCII art."""
+@app.get("/easter-egg", response_class=PlainTextResponse)
+async def get_easter_egg() -> str:
+    """Return ASCII art easter egg formatted for terminal display (e.g. curl)."""
     art = [
         "      _____      ",
         "    /       \\    ",
@@ -45,9 +46,7 @@ async def get_easter_egg() -> dict:
         "   \\         /   ",
         "    \\______/    ",
     ]
-    return {
-        "easter_egg": art
-    }
+    return "\n".join(art)
 
 
 @app.get("/health")
