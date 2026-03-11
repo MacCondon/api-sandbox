@@ -17,3 +17,12 @@ images:
 replicas:
   - name: api-sandbox
     count: 2
+
+patches:
+  - target:
+      kind: Ingress
+      name: api-sandbox
+    patch: |-
+      - op: replace
+        path: /metadata/annotations/alb.ingress.kubernetes.io~1group.name
+        value: api-sandbox-dev

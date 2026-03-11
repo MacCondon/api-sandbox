@@ -77,10 +77,14 @@ This creates three ArgoCD applications automatically:
 ### 5. Access ArgoCD UI
 
 ```bash
-# Get the ArgoCD server URL
+# Port-forward to access locally (recommended)
+kubectl port-forward svc/argocd-server -n argocd 8080:80
+# Then open http://localhost:8080
+
+# Or get the ArgoCD server URL via LoadBalancer
 kubectl get svc -n argocd argocd-server
 
-# Get the initial admin password
+# Get the initial admin password (username: admin)
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 ```
 

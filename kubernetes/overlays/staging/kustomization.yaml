@@ -18,3 +18,12 @@ replicas:
 
 commonLabels:
   app.kubernetes.io/env: staging
+
+patches:
+  - target:
+      kind: Ingress
+      name: api-sandbox
+    patch: |-
+      - op: replace
+        path: /metadata/annotations/alb.ingress.kubernetes.io~1group.name
+        value: api-sandbox-staging
